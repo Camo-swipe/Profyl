@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (Pillar 1)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive definitions and helper validation functions (Phase 3)
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Role lookup using Firestore document fetches (Client claims are not trusted)
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validator for User payload schema rules
+    function isValidUser(data) {
+      return data.id is string && 
+        data.email is string && data.email.size() <= 120 &&
+        data.name is string && data.name.size() <= 100 &&
+        data.role is string && (data.role == 'user' || data.role == 'recruiter' || data.role == 'admin') &&
+        data.plan is string && (data.plan == 'free' || data.plan == 'student_pro' || data.plan == 'premium' || data.plan == 'lifetime') &&
+        data.portfolioCount is int &&
+        data.aiUsageCount is int;
+    }
+
+    // Validator for Portfolio payload schema rules
+    function isValidPortfolio(data) {
+      return data.id is string &&
+        data.userId is string &&
+        data.title is string && data.title.size() <= 200 &&
+        data.templateId is string && (
+          data.templateId == 'cyberpunk' || 
+          data.templateId == 'glassmorphism' || 
+          data.templateId == 'professional' || 
+          data.templateId == 'creative' || 
+          data.templateId == 'founder' || 
+          data.templateId == 'neo_brutalist' || 
+          data.templateId == 'midnight_nebula'
+        ) &&
+        data.accentColor is string && data.accentColor.size() <= 50 &&
+        data.isPublished is bool &&
+        data.slug is string && data.slug.size() <= 100;
+    }
+
+    // 1. User collection match block
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin(); // System administrators view all registered plans
+      
+      // User bootstrap registration
+      allow create: if isSignedIn() && 
+        isOwner(userId) && 
+        isValidId(userId) && 
+        isValidUser(incoming()) && 
+        incoming().id == userId &&
+        incoming().role != 'admin' &&   // Block self-elevated admin role setup
+        incoming().plan == 'free';     // Starts strictly with free tier
+        
+      // Tiered User Update Logic (Pillar 4)
+      allow update: if isSignedIn() && 
+        isValidUser(incoming()) && (
+          // System administrators can modify anything (like the plan upgrades)
+          isAdmin() || 
+          // Standard users updating their own non-restrictive elements
+          (isOwner(userId) && 
+           incoming().role == existing().role && 
+           incoming().plan == existing().plan && 
+           incoming().id == existing().id &&
+           incoming().diff(existing()).affectedKeys().hasOnly(['name', 'portfolioCount', 'aiUsageCount']))
+        );
+        
+      allow delete: if isAdmin();
+    }
+
+    // 2. Portfolio collection match block
+    match /portfolios/{portfolioId} {
+      
+      // Public display allowed only if explicitly published, or if owner retrieves it (Pillar 8)
+      allow get: if (existing().isPublished == true) || (isSignedIn() && existing().userId == request.auth.uid) || isAdmin();
+      
+      // Relational checks to avoid blank query scraping (Pillar 8)
+      allow list: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid) || (resource.data.isPublished == true);
+
+      allow create: if isSignedIn() && 
+        isValidId(portfolioId) && 
+        isValidPortfolio(incoming()) && 
+        incoming().userId == request.auth.uid &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid));
+
+      // Actions allowed under portfolio owner with correct status variables locking
+      allow update: if isSignedIn() && 
+        isValidPortfolio(incoming()) && (
+          isAdmin() || (
+            existing().userId == request.auth.uid &&
+            incoming().userId == request.auth.uid &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'title', 'templateId', 'accentColor', 'isPublished', 'slug', 'skills', 
+              'personalInfo', 'projects', 'experience', 'certifications', 'testimonials', 'customDomain'
+            ])
+          )
+        );
+
+      allow delete: if isSignedIn() && (existing().userId == request.auth.uid || isAdmin());
+    }
+  }
+}

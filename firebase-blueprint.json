@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with details, roles, and subscription information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique Firebase UID of the user" },
+        "email": { "type": "string", "format": "email", "description": "Valid email address of the authenticated user" },
+        "name": { "type": "string", "description": "The profile display name" },
+        "role": { "type": "string", "enum": ["user", "recruiter", "admin"], "description": "User account capability role" },
+        "plan": { "type": "string", "enum": ["free", "student_pro", "premium", "lifetime"], "description": "Active pricing tier plan" },
+        "portfolioCount": { "type": "integer", "description": "Number of active created profiles" },
+        "aiUsageCount": { "type": "integer", "description": "Gemini model hit count tracks" }
+      },
+      "required": ["id", "email", "name", "role", "plan"]
+    },
+    "PortfolioData": {
+      "title": "PortfolioData",
+      "description": "Full details of a published or drafted candidate portfolio",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique id of the portfolio document" },
+        "userId": { "type": "string", "description": "The UID of the owner user who created this portfolio" },
+        "title": { "type": "string", "description": "Brief metadata title descriptive text" },
+        "templateId": { "type": "string", "enum": ["cyberpunk", "glassmorphism", "professional", "creative", "founder", "neo_brutalist", "midnight_nebula"], "description": "Aesthetic style identifier template" },
+        "accentColor": { "type": "string", "description": "Tailwind color swatch or hex accent color" },
+        "isPublished": { "type": "boolean", "description": "Whether the portfolio is live-shared under its slug" },
+        "slug": { "type": "string", "description": "Unique landing slug URL resource path identifier" },
+        "skills": { "type": "array", "description": "List of core skill tags" },
+        "customDomain": { "type": "string", "description": "Custom verified white-labeled domain string of choice" }
+      },
+      "required": ["id", "userId", "title", "templateId", "accentColor", "isPublished", "slug"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "System registered user profiles"
+    },
+    "/portfolios/{portfolioId}": {
+      "schema": "PortfolioData",
+      "description": "Candidate portfolio detailed records dictionary"
+    }
+  }
+}
