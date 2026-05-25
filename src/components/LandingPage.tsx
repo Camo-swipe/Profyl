@@ -559,40 +559,6 @@ export default function LandingPage({ onStartBuilding, onLoginClick }: Props) {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="relative z-10 max-w-5xl w-full px-6 py-16 space-y-12">
-        <h3 className="text-center font-bold text-xs uppercase tracking-widest text-[#f59e0b]">SaaS Testimonials</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-slate-900/60 p-6 border border-slate-800 rounded-2xl relative">
-            <div className="flex gap-1 text-yellow-400 mb-3">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400" />)}
-            </div>
-            <p className="text-slate-300 text-xs sm:text-sm italic">"The Cyberpunk template is exceptional. I generated the layout within 3 minutes and was invited to high-end dev interviews the same week."</p>
-            <div className="mt-4 flex items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=50&q=80" alt="Marcus" className="w-8 h-8 rounded-full" />
-              <div>
-                <p className="text-xs font-bold text-white">David Miller</p>
-                <p className="text-[10px] text-slate-500">Security Architect</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 p-6 border border-slate-800 rounded-2xl relative">
-            <div className="flex gap-1 text-yellow-400 mb-3">
-              {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400" />)}
-            </div>
-            <p className="text-slate-300 text-xs sm:text-sm italic">"Profyl AI saved me countless hours of portfolio tweaking. The visitor analytics are perfect for auditing my client leads focus."</p>
-            <div className="mt-4 flex items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=50&q=80" alt="Sarah" className="w-8 h-8 rounded-full" />
-              <div>
-                <p className="text-xs font-bold text-white">Sarah Jenkins</p>
-                <p className="text-[10px] text-slate-500">UX Lead</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Frequently Asked Questions FAQ */}
       <section className="relative z-10 max-w-4xl w-full px-6 py-16 space-y-6">
         <h3 className="text-center font-bold text-xs uppercase tracking-widest text-indigo-400">Frequently Asked Questions</h3>
@@ -638,7 +604,7 @@ export default function LandingPage({ onStartBuilding, onLoginClick }: Props) {
 
       {/* Landing Footer */}
       <footer className="w-full py-8 border-t border-slate-900 text-center text-xs text-slate-600">
-        <p>&copy; 2026 Profyl AI SaaS Inc. All rights reserved. Created for professional candidates tracking globally. {/* Platform Engine: v2 */}</p>
+        <p>&copy; 2026 K² Technologies. Developed under the owner Koustubh Katti. All rights reserved. {/* Platform Engine: v2 */}</p>
       </footer>
     </div>
   );

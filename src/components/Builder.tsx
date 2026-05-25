@@ -440,11 +440,11 @@ Successfully packaged ZIP file ready for deployment.`);
 
           {/* Quick share visual live link */}
           <a 
-            href={`/api/portfolios/slug/${portfolio.slug}`}
+            href={`/p/${portfolio.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="p-2 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg hover:text-white transition"
-            title="Open sharing JSON slug endpoint URL"
+            title="Open sharing live portfolio visual URL"
             onClick={() => handleSavePortfolio(false)}
           >
             <Share2 className="w-4 h-4" />
@@ -1103,7 +1103,7 @@ Successfully packaged ZIP file ready for deployment.`);
             <div className="bg-slate-950 border border-slate-800 px-4 py-1.5 rounded-lg flex items-center gap-2 max-w-sm w-full">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
               <p className="text-[11px] text-slate-400 truncate font-mono">
-                {portfolio.customDomain || `https://profyl.ai/${portfolio.slug}`}
+                {portfolio.customDomain || `https://profyl.ai/p/${portfolio.slug}`}
               </p>
             </div>
 

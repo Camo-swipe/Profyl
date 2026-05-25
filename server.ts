@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import crypto from "crypto";
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, setDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, setDoc, getDocs, collection, deleteDoc, setLogLevel } from "firebase/firestore";
 
 dotenv.config();
 
@@ -16,9 +16,16 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Resolve visual path elements
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Resolve visual path elements safely in both ESM and CJS environments
+let __filename = "";
+let __dirname = "";
+try {
+  __filename = fileURLToPath(import.meta.url);
+  __dirname = path.dirname(__filename);
+} catch (e) {
+  __filename = path.resolve(process.cwd(), "server.ts");
+  __dirname = process.cwd();
+}
 
 // Initialize Gemini SDK with telemetry header
 let ai: GoogleGenAI | null = null;
@@ -41,6 +48,7 @@ try {
     const firebaseConfig = JSON.parse(fs.readFileSync(firebaseConfigPath, "utf-8"));
     const firebaseApp = initializeApp(firebaseConfig);
     firestoreDb = getFirestore(firebaseApp, firebaseConfig.firestoreDatabaseId);
+    setLogLevel("error");
     console.log("Firebase App & Firestore successfully initialized in server.ts!");
   } else {
     console.warn("firebase-applet-config.json not found. Running in localized in-memory mode.");
@@ -59,160 +67,11 @@ const db = {
       name: "Koustubh Katti",
       role: "admin",
       plan: "premium",
-      portfolioCount: 2,
-      aiUsageCount: 4,
-    },
-    {
-      id: "usr-2",
-      email: "jane.doe@example.com",
-      name: "Jane Doe",
-      role: "user",
-      plan: "free",
       portfolioCount: 1,
-      aiUsageCount: 2,
-    },
-    {
-      id: "usr-3",
-      email: "recruiter@hiringtech.io",
-      name: "Sarah recruiter",
-      role: "recruiter",
-      plan: "free",
-      portfolioCount: 0,
-      aiUsageCount: 0,
+      aiUsageCount: 4,
     }
   ],
   portfolios: [
-    {
-      id: "port-1",
-      userId: "usr-1",
-      title: "My Cyberpunk Lab",
-      templateId: "cyberpunk",
-      accentColor: "#ec4899",
-      isPublished: true,
-      slug: "neon-coder",
-      personalInfo: {
-        name: "Devon Hacker",
-        title: "Senior Cyber Security Engineer & Web3 Architect",
-        bio: "Decentralized systems specialist exploring Rust, zero-knowledge proofs, and glowing visual state terminals.",
-        email: "devon@hacker.io",
-        location: "Neo-Tokyo Synth District",
-        linkedin: "linkedin.com/in/cyberpunk-devon",
-        github: "github.com/neonhacker",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80",
-        headline: "Synthesizing secure code across modern multi-agent dimensions."
-      },
-      skills: ["Rust", "TypeScript", "Solidity", "Tailwind CSS", "Docker", "WASM", "Gemini LLM"],
-      projects: [
-        {
-          id: "p-1",
-          name: "AetherNet Node Scanner",
-          description: "Real-time P2P overlay monitor with integrated visualization and intrusion intelligence mapping.",
-          url: "https://github.com/neonhacker/aethernet",
-          technologies: ["Rust", "WASM", "WebRTC"],
-          image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80"
-        },
-        {
-          id: "p-2",
-          name: "Spectral Theme Compiler",
-          description: "Visual compiler turning code tokens into hot cyberpunk custom gradient vectors.",
-          url: "https://github.com/neonhacker/spectral",
-          technologies: ["TypeScript", "Tailwind", "Canvas"],
-          image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=400&q=80"
-        }
-      ],
-      experience: [
-        {
-          id: "exp-1",
-          company: "Nexus Grid Corp",
-          role: "Lead Systems Security Lead",
-          duration: "2024 - Present",
-          description: "Secured decentralized microservices processing over $12M daily. Automated telemetry pipelines."
-        },
-        {
-          id: "exp-2",
-          company: "SynthLabs Tech",
-          role: "Frontend Engineer",
-          duration: "2022 - 2024",
-          description: "Crafted cyberpunk styled visual telemetry tools using WebGL, React, and high-performance physics loops."
-        }
-      ],
-      certifications: [
-        {
-          id: "cert-1",
-          title: "Certified Kubernetes Administrator (CKA)",
-          issuer: "Cloud Native Computing Foundation",
-          date: "2024",
-          url: "https://cncf.io"
-        }
-      ],
-      testimonials: [
-        {
-          id: "test-1",
-          clientName: "Aria Thorne",
-          role: "CTO, HoloSystems",
-          text: "Devon built a visual telemetry bridge that compressed client feedback latency by 45%. Outstanding design execution.",
-          avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80"
-        }
-      ],
-      customDomain: "matrix.hacker.io"
-    },
-    {
-      id: "port-2",
-      userId: "usr-2",
-      title: "Jane Creative Portfolio",
-      templateId: "glassmorphism",
-      accentColor: "#6366f1",
-      isPublished: true,
-      slug: "jane-designs",
-      personalInfo: {
-        name: "Jane Doe",
-        title: "Product Designer & UI Engineer",
-        bio: "Designing micro-interactions and high-fidelity layouts using generative design theories.",
-        email: "jane.doe@example.com",
-        location: "San Francisco, CA",
-        linkedin: "linkedin.com/in/janedoe",
-        github: "github.com/janedoe",
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80",
-        headline: "Designing soft elegant software boundaries for complex micro-data."
-      },
-      skills: ["Figma", "React", "CSS Variables", "Framer Motion", "Tailwind", "UX Analytics", "AI Styling"],
-      projects: [
-        {
-          id: "p-3",
-          name: "Sienna Air Quality Hub",
-          description: "A soft, semi-transparent frosted layout showing weather details with fluid SVG particles.",
-          url: "https://github.com/janedoe/sienna",
-          technologies: ["React", "Glassmorphism", "SVG"],
-          image: "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=400&q=80"
-        }
-      ],
-      experience: [
-        {
-          id: "exp-3",
-          company: "Florentine studio",
-          role: "Senior UX Specialist",
-          duration: "2023 - Present",
-          description: "Spearheaded design transition to modern glass aesthetics, increasing active retention metrics by 18%."
-        }
-      ],
-      certifications: [
-        {
-          id: "cert-2",
-          title: "Intuit Certified Interactive Designer",
-          issuer: "Intuit UX League",
-          date: "2023"
-        }
-      ],
-      testimonials: [
-        {
-          id: "test-2",
-          clientName: "Marcus Vance",
-          role: "Creative Director",
-          text: "Jane brings an elite sense of negative space and typographic structure. Her code is clean, responsive, and easily testable.",
-          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=100&q=80"
-        }
-      ]
-    },
     {
       id: "port-3",
       userId: "usr-1",
@@ -268,56 +127,11 @@ const db = {
           text: "Koustubh builds server architectures that scale elegantly under unexpected load. His technical leadership was key to our series-B platform migration.",
           avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80"
         }
-      ]
+      ],
+      customDomain: "www.profyl.io"
     }
   ],
   analytics: [
-    {
-      portfolioId: "port-1",
-      views: 1240,
-      uniqueVisitors: 840,
-      recruiterViews: 320,
-      resumeDownloads: 145,
-      projectClicks: { "p-1": 180, "p-2": 110 } as Record<string, number>,
-      devices: { mobile: 520, desktop: 610, tablet: 110 },
-      locations: [
-        { country: "United States", count: 420 },
-        { country: "Japan", count: 320 },
-        { country: "Germany", count: 180 },
-        { country: "India", count: 120 }
-      ],
-      weeklyViews: [
-        { day: "Mon", count: 150 },
-        { day: "Tue", count: 180 },
-        { day: "Wed", count: 240 },
-        { day: "Thu", count: 190 },
-        { day: "Fri", count: 220 },
-        { day: "Sat", count: 140 },
-        { day: "Sun", count: 120 }
-      ]
-    },
-    {
-      portfolioId: "port-2",
-      views: 750,
-      uniqueVisitors: 410,
-      recruiterViews: 120,
-      resumeDownloads: 68,
-      projectClicks: { "p-3": 95 } as Record<string, number>,
-      devices: { mobile: 280, desktop: 410, tablet: 60 },
-      locations: [
-        { country: "United States", count: 310 },
-        { country: "Canada", count: 100 }
-      ],
-      weeklyViews: [
-        { day: "Mon", count: 80 },
-        { day: "Tue", count: 95 },
-        { day: "Wed", count: 110 },
-        { day: "Thu", count: 130 },
-        { day: "Fri", count: 120 },
-        { day: "Sat", count: 85 },
-        { day: "Sun", count: 130 }
-      ]
-    },
     {
       portfolioId: "port-3",
       views: 1950,
@@ -543,7 +357,7 @@ app.post("/api/portfolios", async (req, res) => {
     id: newId,
     userId,
     title: data.title || "My Portfolio Web",
-    templateId: data.templateId || "minimal",
+    templateId: data.templateId || "glassmorphism",
     accentColor: data.accentColor || "#3b82f6",
     isPublished: data.isPublished !== undefined ? data.isPublished : true,
     slug,
@@ -1355,9 +1169,6 @@ async function syncDbFromFirestore() {
 
 // Configure Vite or Static production endpoints wrapped in async to avoid top-level await
 async function startServer() {
-  // Sync from Firestore first
-  await syncDbFromFirestore();
-
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -1373,9 +1184,14 @@ async function startServer() {
     });
   }
 
-  // Global listen trigger
+  // Global listen trigger - Bind to port immediately so Cloud Run health check passes!
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`Profyl AI Server successfully booted on http://localhost:${PORT}`);
+    
+    // Sync from Firestore asynchronously in the background so it doesn't block port binding
+    syncDbFromFirestore().catch((err) => {
+      console.error("Delayed background Firestore sync failed:", err);
+    });
   });
 }
 

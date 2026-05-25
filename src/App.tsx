@@ -31,6 +31,7 @@ import LandingPage from "./components/LandingPage";
 import Builder from "./components/Builder";
 import RecruiterDashboard from "./components/RecruiterDashboard";
 import AdminPanel from "./components/AdminPanel";
+import TemplatesPreview from "./components/TemplatesPreview";
 import FullLogo from "./components/Logo";
 import { auth as firebaseAuth, googleProvider } from "./lib/firebase";
 import { signInWithPopup } from "firebase/auth";
@@ -72,6 +73,12 @@ export default function App() {
   const [userPortfolios, setUserPortfolios] = useState<PortfolioData[]>([]);
   const [dashboardLoading, setDashboardLoading] = useState(false);
 
+  // Public Shared Portfolio Route state
+  const [viewingShared, setViewingShared] = useState(false);
+  const [sharedPortfolio, setSharedPortfolio] = useState<PortfolioData | null>(null);
+  const [sharedPortfolioLoading, setSharedPortfolioLoading] = useState(false);
+  const [sharedPortfolioError, setSharedPortfolioError] = useState("");
+
   // Simulated Payment gateway Dialog
   const [checkoutModalOpen, setCheckoutModalOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState<'plan' | 'payment_method' | 'card' | 'success'>('plan');
@@ -82,8 +89,14 @@ export default function App() {
   const [creditCardExpiry, setCreditCardExpiry] = useState("12/28");
   const [creditCardCvc, setCreditCardCvc] = useState("123");
 
-  // Load cookies or token on mount
+  // Load cookies or token on mount, while preserving shared portfolio routes
   useEffect(() => {
+    const pathname = window.location.pathname;
+    const match = pathname.match(/^\/p\/([a-zA-Z0-9-]+)/) || pathname.match(/^\/portfolio\/([a-zA-Z0-9-]+)/);
+    const urlParams = new URLSearchParams(window.location.search);
+    const slugQuery = urlParams.get("slug") || urlParams.get("p");
+    const isSharedRoute = !!(match || slugQuery);
+
     const savedToken = localStorage.getItem("profyl_token");
     const savedUser = localStorage.getItem("profyl_user");
     if (savedToken && savedUser) {
@@ -93,11 +106,46 @@ export default function App() {
           user: parsedUser,
           token: savedToken
         });
-        // Reroute straight to active dashboard if logged in
-        setCurrentView('dashboard');
+        // Direct to dashboard only if they aren't loading a dedicated shared portfolio link
+        if (!isSharedRoute) {
+          setCurrentView('dashboard');
+        }
       } catch (err) {
         console.error(err);
       }
+    }
+  }, []);
+
+  // Shared Portfolio Route Resolver Trigger Effect
+  useEffect(() => {
+    const pathname = window.location.pathname;
+    const match = pathname.match(/^\/p\/([a-zA-Z0-9-]+)/) || pathname.match(/^\/portfolio\/([a-zA-Z0-9-]+)/);
+    const urlParams = new URLSearchParams(window.location.search);
+    const slugQuery = urlParams.get("slug") || urlParams.get("p");
+    const slugToLoad = (match ? match[1] : null) || slugQuery;
+
+    if (slugToLoad) {
+      setViewingShared(true);
+      setSharedPortfolioLoading(true);
+      setSharedPortfolioError("");
+      
+      fetch(`/api/portfolios/slug/${slugToLoad}`)
+        .then(async (res) => {
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "This portfolio could not be retrieved, is offline, or under moderate review.");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          setSharedPortfolio(data);
+        })
+        .catch((err: any) => {
+          setSharedPortfolioError(err.message || "Failed to fetch visual portfolio.");
+        })
+        .finally(() => {
+          setSharedPortfolioLoading(false);
+        });
     }
   }, []);
 
@@ -417,6 +465,62 @@ export default function App() {
     }
   };
 
+  if (viewingShared) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans select-none scrollbar-none">
+        {/* Floating return trigger */}
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          <button
+            onClick={() => {
+              window.history.pushState({}, "", "/");
+              setViewingShared(false);
+              setSharedPortfolio(null);
+              const savedUser = localStorage.getItem("profyl_user");
+              if (savedUser) {
+                setCurrentView('dashboard');
+              } else {
+                setCurrentView('landing');
+              }
+            }}
+            className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg font-bold text-xs uppercase transition flex items-center gap-1 cursor-pointer"
+          >
+            ← Back to Profyl
+          </button>
+        </div>
+
+        {sharedPortfolioLoading ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-24 text-slate-400 bg-slate-950">
+            <Loader2 className="w-10 h-10 animate-spin text-indigo-500 mb-4" />
+            <p className="text-sm font-semibold">Loading Custom Visual Portfolio Showcase...</p>
+          </div>
+        ) : sharedPortfolioError ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-24 px-6 text-center bg-slate-950">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-full mb-4">
+              <X className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="font-extrabold text-white text-lg font-mono">PORTFOLIO OFFLINE</h3>
+            <p className="text-slate-400 text-xs mt-1 max-w-sm">{sharedPortfolioError}</p>
+            <button
+              onClick={() => {
+                window.history.pushState({}, "", "/");
+                setViewingShared(false);
+                setSharedPortfolio(null);
+                setCurrentView('landing');
+              }}
+              className="mt-6 px-4 py-2 bg-slate-800 hover:bg-slate-705 rounded-lg text-xs font-bold transition cursor-pointer"
+            >
+              Go to Landing Page
+            </button>
+          </div>
+        ) : sharedPortfolio ? (
+          <div className="flex-1 min-h-screen w-full relative">
+            <TemplatesPreview data={sharedPortfolio} />
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
     <div className={`min-h-screen flex flex-col font-sans select-none scrollbar-none transition-colors duration-150 ${theme === 'light' ? 'theme-light' : 'bg-slate-950 text-slate-100'}`}>
       
@@ -613,7 +717,7 @@ export default function App() {
                       <div className="p-3 bg-slate-950 rounded-lg text-xs leading-none font-mono flex items-center justify-between text-slate-400">
                         <span>Slug url:</span>
                         <a 
-                          href={`/api/portfolios/slug/${port.slug}`}
+                          href={`/p/${port.slug}`}
                           target="_blank"
                           className="hover:text-indigo-400 underline flex items-center gap-1"
                         >
@@ -663,7 +767,7 @@ export default function App() {
 
       {/* FOOTER SYSTEM */}
       <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-slate-600 shrink-0">
-        <p>Profyl AI — Created securely conforming to sandboxed Express endpoints frameworks on Local Port 3000. {/* Version: v2 */}</p>
+        <p>Profyl — Developed by K² Technologies under the owner Koustubh Katti. {/* Version: v2 */}</p>
       </footer>
 
       {/* AUTH MODAL DIALOGS BOXES */}

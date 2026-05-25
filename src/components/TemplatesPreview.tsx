@@ -47,8 +47,366 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
 
   const handleDownloadResume = () => {
     tracker("download");
-    // Simulate simple resume print / pdf trigger
-    alert(`[Resume Export] Successfully downloaded PDF Resume for ${data.personalInfo.name}`);
+
+    const p = personalInfo || { name: "", title: "", bio: "", email: "", location: "", linkedin: "", github: "", headline: "" };
+    const nameStr = p.name || "Portfolio Owner";
+    const titleStr = p.title || "Developer";
+    const bioStr = p.bio || p.headline || "Professional Developer Portfolio Profile.";
+
+    // Simple HTML resume generator that converts perfectly to physical PDF
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${nameStr} - Professional Resume</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background-color: #f8fafc;
+      line-height: 1.5;
+      padding: 2.5rem 1rem;
+    }
+
+    .no-print {
+      max-width: 800px;
+      margin: 0 auto 1.5rem auto;
+      background: #4f46e5;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13.5px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
+    }
+    .no-print button {
+      background: white;
+      color: #4f46e5;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 4px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 12.5px;
+      transition: background 0.15s ease;
+    }
+    .no-print button:hover {
+      background: #f1f5f9;
+    }
+
+    .resume-container {
+      background: white;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 10px 15px -3px rgba(0,0,0,0.03);
+    }
+
+    header {
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .header-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+    }
+
+    .subtitle-role {
+      font-size: 1.1rem;
+      color: #4f46e5;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .contact-info {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #0f172a;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 0.25rem;
+      margin-top: 1.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .bio {
+      font-size: 0.9rem;
+      color: #334155;
+      margin-bottom: 1rem;
+    }
+
+    .timeline-item {
+      margin-bottom: 1.25rem;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .timeline-sub {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.875rem;
+      color: #4f46e5;
+      font-weight: 600;
+      margin-top: 0.125rem;
+      margin-bottom: 0.375rem;
+    }
+
+    .timeline-desc {
+      font-size: 0.85rem;
+      color: #334155;
+      white-space: pre-line;
+      line-height: 1.45;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 640px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .project-card {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .project-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .project-tech {
+      font-size: 0.775rem;
+      color: #4f46e5;
+      font-weight: 600;
+      margin-bottom: 0.375rem;
+    }
+
+    .project-desc {
+      font-size: 0.825rem;
+      color: #475569;
+      line-height: 1.4;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 0.775rem;
+      font-weight: 600;
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .cert-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 640px) {
+      .cert-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .cert-item {
+      font-size: 0.85rem;
+      color: #334155;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .resume-container {
+        padding: 0;
+        box-shadow: none;
+        border-radius: 0;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="no-print">
+    <span>📄 Your professional CV is ready to print or save. Quick-tip: Select <strong>"Save as PDF"</strong> for clean formatting.</span>
+    <button onclick="window.print()">Export to PDF</button>
+  </div>
+
+  <div class="resume-container">
+    <header>
+      <div class="header-main">
+        <div>
+          <h1>${nameStr}</h1>
+          <div class="subtitle-role">${titleStr}</div>
+        </div>
+      </div>
+      <div class="contact-info">
+        ${p.email ? `<div class="contact-item"><strong>📧</strong> ${p.email}</div>` : ""}
+        ${p.location ? `<div class="contact-item"><strong>📍</strong> ${p.location}</div>` : ""}
+        ${p.linkedin ? `<div class="contact-item"><strong>🔗</strong> <a href="https://${p.linkedin.replace("https://", "")}" target="_blank">${p.linkedin}</a></div>` : ""}
+        ${p.github ? `<div class="contact-item"><strong>💻</strong> <a href="https://${p.github.replace("https://", "")}" target="_blank">${p.github}</a></div>` : ""}
+      </div>
+    </header>
+
+    <main>
+      <section>
+        <div class="section-title">Professional Summary</div>
+        <div class="bio">${bioStr}</div>
+      </section>
+
+      ${skills && skills.length > 0 ? `
+      <section>
+        <div class="section-title">Core Skills</div>
+        <div class="tags">
+          ${skills.map((s: string) => `<span class="tag">${s}</span>`).join("")}
+        </div>
+      </section>
+      ` : ""}
+
+      ${experience && experience.length > 0 ? `
+      <section>
+        <div class="section-title">Professional Experience</div>
+        ${experience.map((exp: any) => `
+          <div class="timeline-item">
+            <div class="timeline-header">
+              <div>${exp.company}</div>
+              <div style="font-weight: 500; font-size: 0.85rem; color: #64748b;">${exp.duration}</div>
+            </div>
+            <div class="timeline-sub">
+              <div>${exp.role}</div>
+            </div>
+            <p class="timeline-desc">${exp.description}</p>
+          </div>
+        `).join("")}
+      </section>
+      ` : ""}
+
+      ${projects && projects.length > 0 ? `
+      <section>
+        <div class="section-title">Key Projects</div>
+        <div class="grid-2">
+          ${projects.map((proj: any) => `
+            <div class="project-card">
+              <div class="project-name">${proj.name}</div>
+              <div class="project-tech">${proj.technologies ? proj.technologies.join(", ") : ""}</div>
+              <p class="project-desc">${proj.description}</p>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+      ` : ""}
+
+      ${certifications && certifications.length > 0 ? `
+      <section>
+        <div class="section-title">Certifications & Credentials</div>
+        <div class="cert-grid">
+          ${certifications.map((cert: any) => `
+            <div class="cert-item">
+              <strong>${cert.title}</strong> — <span style="color: #64748b;">${cert.issuer} ${cert.date ? `(${cert.date})` : ""}</span>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+      ` : ""}
+
+      ${testimonials && testimonials.length > 0 ? `
+      <section>
+        <div class="section-title">Key Citations / Recommendations</div>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          ${testimonials.map((test: any) => `
+            <div style="background: #faf8ff; padding: 0.75rem; border-left: 3px solid #6366f1; border-radius: 4px;">
+              <p style="font-style: italic; font-size: 0.825rem; color: #475569;">"${test.text}"</p>
+              <div style="font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-top: 0.25rem; text-align: right;">
+                — ${test.clientName}, <span style="font-weight: 500; color: #64748b;">${test.role}</span>
+              </div>
+            </div>
+          `).join("")}
+        </div>
+      </section>
+      ` : ""}
+    </main>
+  </div>
+</body>
+</html>`;
+
+    // Package to download blob
+    const blob = new Blob([htmlContent], { type: "text/html;charset=utf-8" });
+    const fileUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = fileUrl;
+    link.download = `${nameStr.toLowerCase().replace(/\s+/g, "_")}_Resume.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(fileUrl);
   };
 
   const handleProjectClick = (projId: string, url: string) => {
