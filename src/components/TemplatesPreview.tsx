@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { 
   Briefcase, 
@@ -16,16 +17,86 @@ import {
   ShieldCheck,
   TrendingUp,
   Terminal,
-  Cpu
+  Cpu,
+  Sparkles
 } from "lucide-react";
 import { PortfolioData } from "../types";
+import FullLogo from "./Logo";
+
+function AnimatedCounter({ value, duration = 1.8 }: { value: string; duration?: number }) {
+  const [count, setCount] = useState(0);
+  const numericValue = parseInt(value.replace(/[^0-9]/g, ""), 10) || 0;
+  const suffix = value.replace(/[0-9]/g, "");
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / (duration * 1000), 1);
+      setCount(Math.floor(progress * numericValue));
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [numericValue, duration]);
+
+  return <span>{count}{suffix}</span>;
+}
+
+function CyberpunkGrid() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#020617_1.5px,transparent_1.5px),linear-gradient(to_bottom,#020617_1.5px,transparent_1.5px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-35" />
+      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-pink-500/5" />
+      <div className="cyberpunk-noise absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%] opacity-20" />
+    </div>
+  );
+}
+
+function GlassOrbs() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <motion.div 
+        animate={{ x: [0, 40, -20, 0], y: [0, -40, 30, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-20 left-10 w-64 h-64 rounded-full bg-indigo-500/15 blur-3xl"
+      />
+      <motion.div 
+        animate={{ x: [0, -30, 50, 0], y: [0, 40, -30, 0] }}
+        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-pink-500/10 blur-3xl"
+      />
+    </div>
+  );
+}
+
+function NebulaStars() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {/* Aurora nebulas */}
+      <motion.div 
+        animate={{ scale: [1, 1.15, 0.9, 1], opacity: [0.3, 0.45, 0.25, 0.3] }}
+        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-indigo-600/10 blur-3xl"
+      />
+      <motion.div 
+        animate={{ scale: [1, 0.85, 1.15, 1], opacity: [0.25, 0.4, 0.2, 0.25] }}
+        transition={{ duration: 30, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute bottom-1/4 right-1/4 w-[28rem] h-[28rem] rounded-full bg-violet-600/10 blur-3xl"
+      />
+      <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(ellipse at center, rgba(255,255,255,0.15) 1px, transparent 1px)', backgroundSize: '24px 24px', opacity: 0.6 }} />
+    </div>
+  );
+}
 
 interface Props {
   data: PortfolioData;
   isDemo?: boolean;
+  userPlan?: 'free' | 'student_pro' | 'premium' | 'lifetime';
 }
 
-export default function TemplatesPreview({ data, isDemo = false }: Props) {
+export default function TemplatesPreview({ data, isDemo = false, userPlan }: Props) {
   const [copied, setCopied] = useState(false);
 
   const tracker = async (type: "view" | "download" | "click", projectId?: string) => {
@@ -47,6 +118,9 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
 
   const handleDownloadResume = () => {
     tracker("download");
+
+    const effectivePlan = userPlan || data.userPlan || 'free';
+    const isFreePlan = effectivePlan === 'free';
 
     const p = personalInfo || { name: "", title: "", bio: "", email: "", location: "", linkedin: "", github: "", headline: "" };
     const nameStr = p.name || "Portfolio Owner";
@@ -111,6 +185,29 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
       padding: 3rem;
       border-radius: 12px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 10px 15px -3px rgba(0,0,0,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .watermark-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-30deg);
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: rgba(79, 70, 229, 0.05);
+      pointer-events: none;
+      white-space: nowrap;
+      user-select: none;
+      z-index: 1;
+      font-family: sans-serif;
+      letter-spacing: 0.15em;
+    }
+
+    header, main, section {
+      position: relative;
+      z-index: 2;
     }
 
     header {
@@ -301,6 +398,13 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
   </div>
 
   <div class="resume-container">
+    ${isFreePlan ? `<div class="watermark-overlay">POWERED BY PROFYL AI</div>` : ""}
+    ${isFreePlan ? `
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; font-size: 11px; color: #64748b; font-family: 'Inter', sans-serif; position: relative; z-index: 2;">
+      <span style="font-weight: 500;">Generated with <strong style="color: #4f46e5;">Profyl AI</strong> (Free Account)</span>
+      <span style="font-weight: bold; color: #4f46e5; font-size: 10px; background: #e0e7ff; padding: 2px 8px; border-radius: 9999px; text-transform: uppercase;">Watermark</span>
+    </div>
+    ` : ""}
     <header>
       <div class="header-main">
         <div>
@@ -392,6 +496,13 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
         </div>
       </section>
       ` : ""}
+      
+      ${isFreePlan ? `
+      <div style="margin-top: 3.5rem; padding-top: 1.25rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-family: 'Inter', sans-serif; font-size: 11px; color: #94a3b8; position: relative; z-index: 2;">
+        <div>Build your own professional online portfolio at <a href="https://profyl.ai" target="_blank" style="color: #4f46e5; text-decoration: none; font-weight: 700;">profyl.ai</a></div>
+        <div style="font-weight: 800; color: #4f46e5;">PROFYL.AI</div>
+      </div>
+      ` : ""}
     </main>
   </div>
 </body>
@@ -416,39 +527,60 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
 
   const { personalInfo, skills, projects, experience, certifications, testimonials, templateId, accentColor } = data;
 
-  // 1. DEVELOPER CYBERPUNK TEMPLATE
-  if (templateId === "cyberpunk") {
+  const templateContent = (() => {
+    // 1. DEVELOPER CYBERPUNK TEMPLATE
+    if (templateId === "cyberpunk") {
     return (
-      <div className="w-full min-h-screen bg-slate-950 text-emerald-400 font-mono p-4 md:p-8 relative overflow-hidden border-2 border-slate-800 rounded-xl">
-        {/* Glow grid backdrops */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#020617_1px,transparent_1px),linear-gradient(to_bottom,#020617_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30" />
-        
-        {/* Neon scanline overlay */}
-        <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[size:100%_4px,3px_100%]" />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.98 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="w-full min-h-screen bg-slate-950 text-emerald-400 font-mono p-4 md:p-8 relative overflow-hidden border-2 border-emerald-500/20 rounded-xl"
+      >
+        <CyberpunkGrid />
 
         {/* Header Terminal style */}
         <header className="relative z-10 max-w-5xl mx-auto border-b border-emerald-500/30 pb-6 mb-8">
           <div className="flex justify-between items-center text-xs mb-4 text-emerald-500/60">
-            <span className="flex items-center gap-1"><Terminal className="w-3 h-3" /> PROFYL_OS v2.43 // CONNECTED</span>
-            <span>SECURE STATE / IP_LOCAL</span>
+            <motion.span 
+              animate={{ opacity: [1, 0.4, 1] }} 
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="flex items-center gap-1"
+            >
+              <Terminal className="w-3 h-3" /> PROFYL_OS // CONNECTED
+            </motion.span>
+            <span className="text-[10px] bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded text-emerald-500">SYS_SECURE</span>
           </div>
           
           <div className="flex flex-col md:flex-row items-center gap-6 mt-4">
-            <div className="relative">
+            <motion.div 
+              whileHover={{ scale: 1.08 }}
+              className="relative cursor-pointer"
+            >
               <div className="absolute -inset-1.5 bg-pink-500 rounded-full blur opacity-40 animate-pulse" />
               <img 
                 src={personalInfo.avatar || "https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=150&q=80"} 
                 alt={personalInfo.name} 
                 className="w-24 h-24 rounded-full border-2 border-pink-500 object-cover relative z-10"
               />
-            </div>
+            </motion.div>
             <div className="text-center md:text-left">
-              <h1 className="text-3xl font-black text-white tracking-widest uppercase flex flex-wrap justify-center md:justify-start items-center gap-2">
+              <motion.h1 
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-3xl font-black text-white tracking-widest uppercase flex flex-wrap justify-center md:justify-start items-center gap-2"
+              >
                 {personalInfo.name}
-                <span className="text-xs px-2 py-0.5 border border-pink-500 text-pink-500 uppercase font-mono tracking-normal shrink-0 rounded">
+                <motion.span 
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-xs px-2 py-0.5 border border-pink-500 text-pink-500 uppercase font-mono tracking-normal shrink-0 rounded"
+                >
                   SYS_LEADER
-                </span>
-              </h1>
+                </motion.span>
+              </motion.h1>
               <p className="text-pink-500 font-bold mt-1 text-base">{personalInfo.title}</p>
               <div className="flex flex-wrap justify-center md:justify-start gap-4 text-xs mt-3 text-slate-400">
                 <span className="flex items-center gap-1 text-emerald-500"><MapPin className="w-3 h-3" /> {personalInfo.location}</span>
@@ -460,10 +592,15 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
 
         {/* Bio Terminal */}
         <main className="relative z-10 max-w-5xl mx-auto space-y-12 pb-16">
-          <section className="bg-slate-900/80 border border-emerald-500/20 rounded p-6 shadow-lg shadow-emerald-950/20">
+          <motion.section 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-slate-900/80 border border-emerald-500/20 rounded p-6 shadow-lg shadow-emerald-950/20 hover:border-pink-500/30 transition duration-300"
+          >
             <div className="flex items-center gap-2 mb-4 border-b border-emerald-500/20 pb-2">
-              <div className="w-3 h-3 rounded-full bg-pink-500" />
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span className="w-2.5 h-2.5 rounded-full bg-pink-500 animate-ping" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-2">WHOAMI // BIOS_SUMMARY</h3>
             </div>
             <p className="text-emerald-300 leading-relaxed text-sm md:text-base">{personalInfo.bio}</p>
@@ -472,26 +609,32 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 &gt;&gt; "{personalInfo.headline}"
               </p>
             )}
-          </section>
+          </motion.section>
 
           {/* Grid setup */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Skills Panel */}
-            <section className="md:col-span-1 bg-slate-900/80 border border-emerald-500/20 rounded p-6">
+            <motion.section 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+              className="md:col-span-1 bg-slate-900/80 border border-emerald-500/20 rounded p-6"
+            >
               <h3 className="text-sm font-black text-white tracking-wider uppercase border-b border-emerald-500/20 pb-2 mb-4 flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-pink-500" /> INVENTORY
               </h3>
               <div className="flex flex-wrap gap-2">
                 {skills.map((skill, index) => (
-                  <span 
+                  <motion.span 
                     key={index} 
-                    className="text-xs px-2 py-1 bg-slate-950 border border-emerald-500/40 text-emerald-400 hover:border-pink-500 hover:text-white transition duration-200 cursor-default rounded"
+                    whileHover={{ scale: 1.08, borderColor: '#ec4899', color: '#fff' }}
+                    className="text-xs px-2.5 py-1 bg-slate-950 border border-emerald-500/40 text-emerald-400 transition-colors duration-150 cursor-pointer rounded"
                   >
                     [ {skill} ]
-                  </span>
+                  </motion.span>
                 ))}
               </div>
-            </section>
+            </motion.section>
 
             {/* Exp and Certifications */}
             <div className="md:col-span-2 space-y-8">
@@ -502,14 +645,17 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {projects.map((proj) => (
-                    <div 
+                    <motion.div 
                       key={proj.id} 
                       onClick={() => handleProjectClick(proj.id, proj.url)}
-                      className="group border border-emerald-500/10 hover:border-pink-500/50 bg-slate-950/60 p-4 rounded transition duration-200 cursor-pointer flex flex-col justify-between"
+                      whileHover={{ y: -4, borderColor: '#ec4899', boxShadow: '0 8px 24px rgba(236,72,153,0.1)' }}
+                      className="group border border-emerald-500/15 bg-slate-950/65 p-4 rounded transition-all duration-200 cursor-pointer flex flex-col justify-between"
                     >
                       <div>
                         {proj.image && (
-                          <img src={proj.image} alt={proj.name} className="w-full h-24 object-cover rounded opacity-80 group-hover:opacity-100 transition mb-3" />
+                          <div className="overflow-hidden rounded mb-3 bg-slate-900">
+                            <img src={proj.image} alt={proj.name} className="w-full h-24 object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 duration-300" />
+                          </div>
                         )}
                         <h4 className="font-bold text-white text-sm group-hover:text-pink-400 duration-200 flex items-center gap-1.5">
                           {proj.name} <ExternalLink className="w-3 h-3 text-slate-500 shrink-0" />
@@ -523,7 +669,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                           </span>
                         ))}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </section>
@@ -535,14 +681,18 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 </h3>
                 <div className="space-y-6">
                   {experience.map((exp) => (
-                    <div key={exp.id} className="border-l border-pink-500/40 pl-4 py-1">
+                    <motion.div 
+                      key={exp.id} 
+                      whileHover={{ x: 3 }}
+                      className="border-l border-pink-500/40 pl-4 py-1"
+                    >
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <h4 className="font-bold text-white text-sm">{exp.role}</h4>
                         <span className="text-xs text-pink-500 bg-pink-500/10 px-2 py-0.5 border border-pink-500/20 rounded">{exp.duration}</span>
                       </div>
                       <p className="text-xs text-emerald-500 mt-0.5">{exp.company}</p>
                       <p className="text-slate-400 text-xs mt-2">{exp.description}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </section>
@@ -587,30 +737,40 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
         <footer className="relative z-10 max-w-5xl mx-auto border-t border-emerald-500/20 pt-6 mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-xs text-slate-500 font-mono">ENCRYPTED ENDPOINT WITH AES_256</p>
           <div className="flex gap-4">
-            <button 
+            <motion.button 
               onClick={handleDownloadResume}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
               className="px-4 py-2 bg-pink-600 hover:bg-pink-700 text-white font-mono text-xs rounded transition flex items-center gap-2 font-bold shadow-lg shadow-pink-900/30"
             >
               <Download className="w-3.5 h-3.5" /> DECRYPT_RESUME.PDF
-            </button>
+            </motion.button>
           </div>
         </footer>
-      </div>
+      </motion.div>
     );
   }
 
   // 2. MINIMAL GLASSMORPHISM TEMPLATE
   if (templateId === "glassmorphism") {
     return (
-      <div className="w-full min-h-screen bg-gradient-to-br from-indigo-950 via-slate-950 to-slate-900 text-slate-100 p-4 md:p-12 relative overflow-hidden border border-indigo-900/30 rounded-xl">
-        {/* Dynamic smooth floating light circles blur */}
-        <div className="absolute top-20 left-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl animate-pulse" />
-        <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-pink-500/20 blur-3xl" />
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full min-h-screen bg-gradient-to-br from-indigo-950 via-slate-950 to-slate-900 text-slate-100 p-4 md:p-12 relative overflow-hidden border border-indigo-900/30 rounded-xl"
+      >
+        <GlassOrbs />
 
         <div className="relative z-10 max-w-4xl mx-auto space-y-12">
           {/* Main top Profile Card */}
-          <header className="backdrop-blur-md bg-white/5 border border-white/10 p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center gap-8">
-            <img 
+          <motion.header 
+            whileHover={{ y: -4, transition: { duration: 0.2 } }}
+            className="backdrop-blur-md bg-white/5 border border-white/10 p-8 rounded-2xl shadow-xl flex flex-col md:flex-row items-center gap-8 duration-300"
+          >
+            <motion.img 
+              whileHover={{ rotate: 2 }}
               src={personalInfo.avatar || "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&q=80"} 
               alt={personalInfo.name} 
               className="w-28 h-28 rounded-2xl object-cover ring-2 ring-indigo-500/40 shadow-inner"
@@ -626,18 +786,25 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 <span className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-indigo-400" /> {personalInfo.email}</span>
               </div>
             </div>
-            <button 
+            <motion.button 
               onClick={handleDownloadResume} 
-              className="w-full md:w-auto shrink-0 px-5 py-2.5 bg-indigo-600/30 border border-indigo-400/30 hover:bg-indigo-600 hover:text-white transition duration-200 backdrop-blur-md text-indigo-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.96 }}
+              className="w-full md:w-auto shrink-0 px-5 py-2.5 bg-indigo-600/30 border border-indigo-400/30 hover:bg-indigo-600 hover:text-white transition-all duration-200 backdrop-blur-md text-indigo-300 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow"
             >
               <Download className="w-4 h-4" /> Download Resume
-            </button>
-          </header>
+            </motion.button>
+          </motion.header>
 
           <main className="space-y-8">
             {/* About and Skills in Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 backdrop-blur-md bg-white/5 border border-white/10 p-6 rounded-2xl shadow-lg space-y-4">
+              <motion.div 
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 }}
+                className="md:col-span-2 backdrop-blur-md bg-white/5 border border-white/10 p-6 rounded-2xl shadow-lg space-y-4"
+              >
                 <h3 className="text-lg font-bold text-slate-200 border-b border-indigo-900/30 pb-2">About Me</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">{personalInfo.bio}</p>
                 {personalInfo.headline && (
@@ -645,17 +812,26 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                     "{personalInfo.headline}"
                   </p>
                 )}
-              </div>
-              <div className="backdrop-blur-md bg-white/5 border border-white/10 p-6 rounded-2xl shadow-lg space-y-4">
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.15 }}
+                className="backdrop-blur-md bg-white/5 border border-white/10 p-6 rounded-2xl shadow-lg space-y-4"
+              >
                 <h3 className="text-lg font-bold text-slate-200 border-b border-indigo-900/30 pb-2">Skills Inventory</h3>
                 <div className="flex flex-wrap gap-1.5">
                   {skills.map((s, idx) => (
-                    <span key={idx} className="text-xs px-2.5 py-1 bg-white/5 hover:bg-white/15 border border-white/10 text-slate-300 cursor-default rounded-lg duration-150">
+                    <motion.span 
+                      key={idx} 
+                      whileHover={{ scale: 1.08, backgroundColor: "rgba(255, 255, 255, 0.15)" }}
+                      className="text-xs px-2.5 py-1 bg-white/5 border border-white/10 text-slate-300 cursor-pointer rounded-lg transition duration-150"
+                    >
                       {s}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
-              </div>
+              </motion.div>
             </div>
 
             {/* Work experience */}
@@ -664,15 +840,22 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 <Briefcase className="w-4 h-4 text-indigo-400" /> Professional Journeys
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {experience.map((exp) => (
-                  <div key={exp.id} className="bg-white/2 border border-white/5 hover:border-indigo-500/20 p-4 rounded-xl transition space-y-2">
+                {experience.map((exp, expIdx) => (
+                  <motion.div 
+                    key={exp.id} 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 + expIdx * 0.05 }}
+                    whileHover={{ y: -3, borderColor: "rgba(99, 102, 241, 0.3)" }}
+                    className="bg-white/2 border border-white/5 p-4 rounded-xl transition duration-200 space-y-2 cursor-default"
+                  >
                     <div className="flex justify-between items-start gap-2">
                       <h4 className="font-semibold text-slate-100 text-sm">{exp.role}</h4>
                       <span className="text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full">{exp.duration}</span>
                     </div>
                     <p className="text-indigo-400 font-medium text-xs">{exp.company}</p>
                     <p className="text-slate-400 text-xs leading-relaxed">{exp.description}</p>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </section>
@@ -683,16 +866,20 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 <Layers className="w-4 h-4 text-pink-400" /> Showcase Projects
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((proj) => (
-                  <div 
+                {projects.map((proj, projIdx) => (
+                  <motion.div 
                     key={proj.id} 
                     onClick={() => handleProjectClick(proj.id, proj.url)}
-                    className="backdrop-blur-md bg-white/5 border border-white/10 hover:border-pink-500/40 p-4 rounded-2xl shadow-md cursor-pointer group flex flex-col justify-between hover:-translate-y-1 duration-200"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 + projIdx * 0.05 }}
+                    whileHover={{ y: -6, borderColor: "rgba(244, 63, 94, 0.4)", boxShadow: "0 10px 30px rgba(99, 102, 241, 0.15)" }}
+                    className="backdrop-blur-md bg-white/5 border border-white/10 p-4 rounded-2xl shadow-md cursor-pointer group flex flex-col justify-between duration-200"
                   >
                     <div>
                       {proj.image && (
                         <div className="overflow-hidden rounded-xl mb-3">
-                          <img src={proj.image} alt={proj.name} className="w-full h-32 object-cover group-hover:scale-105 duration-200" />
+                          <img src={proj.image} alt={proj.name} className="w-full h-32 object-cover group-hover:scale-105 duration-300" />
                         </div>
                       )}
                       <h4 className="font-bold text-slate-100 text-sm group-hover:text-pink-300 flex items-center justify-between gap-2 duration-150">
@@ -707,7 +894,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                         </span>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </section>
@@ -721,7 +908,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                   </h4>
                   <div className="space-y-3">
                     {certifications.map((c) => (
-                      <div key={c.id} className="text-xs">
+                      <div key={c.id} className="text-xs border-b border-white/5 pb-2 last:border-0 last:pb-0">
                         <p className="font-semibold text-slate-200">{c.title}</p>
                         <p className="text-slate-400 text-[11px]">{c.issuer} • {c.date}</p>
                       </div>
@@ -736,7 +923,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                     <MessageSquare className="w-4 h-4 text-pink-400" /> Colleague Endorsements
                   </h4>
                   {testimonials.map((t) => (
-                    <div key={t.id} className="text-xs space-y-2">
+                    <div key={t.id} className="text-xs space-y-2 border-b border-white/5 pb-2 last:border-0 last:pb-0">
                       <p className="text-slate-300 italic">"{t.text}"</p>
                       <div className="flex items-center gap-2 justify-end">
                         {t.avatar && <img src={t.avatar} alt={t.clientName} className="w-5 h-5 rounded-full object-cover" />}
@@ -749,7 +936,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
             </div>
           </main>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
@@ -1251,13 +1438,18 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
   // 7. MIDNIGHT NEBULA THEME (Cosmic purple, starry gradient dark mode, modern neon)
   if (templateId === "midnight_nebula") {
     return (
-      <div className="w-full min-h-screen bg-neutral-950 text-slate-100 p-6 md:p-12 border border-violet-500/30 rounded-xl relative space-y-12 overflow-hidden">
-        {/* Cosmos gradient nodes */}
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 rounded-full bg-indigo-600/15 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-violet-600/15 blur-3xl" />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.99 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.99 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="w-full min-h-screen bg-neutral-950 text-slate-100 p-6 md:p-12 border border-violet-500/30 rounded-xl relative space-y-12 overflow-hidden"
+      >
+        <NebulaStars />
         
         <header className="relative z-10 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6 pb-8 border-b border-violet-900/30">
-          <img 
+          <motion.img 
+            whileHover={{ scale: 1.1, rotate: [0, -4, 4, 0] }}
             src={personalInfo.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&q=80"} 
             alt={personalInfo.name} 
             className="w-24 h-24 rounded-full object-cover border-2 border-violet-500 ring-4 ring-indigo-950"
@@ -1276,18 +1468,25 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
               <span>✉️ {personalInfo.email}</span>
             </div>
           </div>
-          <button 
+          <motion.button 
             type="button"
             onClick={handleDownloadResume} 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.96 }}
             className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-black uppercase tracking-wider rounded-xl transition shadow-lg shadow-violet-950/50 shrink-0"
           >
             Launch Astro CV
-          </button>
+          </motion.button>
         </header>
 
         <main className="relative z-10 max-w-4xl mx-auto space-y-10">
           {/* Bio statement */}
-          <section className="bg-neutral-900/60 border border-violet-900/20 p-6 md:p-8 rounded-2xl space-y-3 backdrop-blur-sm">
+          <motion.section 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-neutral-900/60 border border-violet-900/20 p-6 md:p-8 rounded-2xl space-y-3 backdrop-blur-sm"
+          >
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-widest">01 / Pitch Narrative</h3>
             <p className="text-slate-200 text-base font-light leading-relaxed">
               "{personalInfo.bio}"
@@ -1297,17 +1496,21 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                 &gt;&gt; {personalInfo.headline}
               </p>
             )}
-          </section>
+          </motion.section>
 
           {/* Ventured Projects */}
           <section className="space-y-4">
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-widest">02 / Selected Cosmos Missions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {projects.map((proj) => (
-                <div 
+              {projects.map((proj, projIdx) => (
+                <motion.div 
                   key={proj.id} 
                   onClick={() => handleProjectClick(proj.id, proj.url)}
-                  className="bg-neutral-900/40 border border-violet-950 hover:border-violet-500 p-5 rounded-2xl transition duration-300 cursor-pointer flex flex-col justify-between group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 + projIdx * 0.05 }}
+                  whileHover={{ y: -5, borderColor: "#8b5cf6", boxShadow: "0 10px 25px rgba(139, 92, 246, 0.15)" }}
+                  className="bg-neutral-900/40 border border-violet-950 p-5 rounded-2xl transition duration-300 cursor-pointer flex flex-col justify-between group"
                 >
                   <div className="space-y-2">
                     <h4 className="font-extrabold text-white text-base flex justify-between items-center">
@@ -1322,7 +1525,7 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
                       </span>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
@@ -1331,13 +1534,19 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
           <section className="bg-neutral-900/30 border border-violet-950 p-6 rounded-2xl space-y-6">
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-widest">03 / Astrochronology</h3>
             <div className="space-y-6 relative border-l-2 border-violet-900/40 pl-5 ml-2">
-              {experience.map((exp) => (
-                <div key={exp.id} className="relative space-y-1">
+              {experience.map((exp, expIdx) => (
+                <motion.div 
+                  key={exp.id} 
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 + expIdx * 0.05 }}
+                  className="relative space-y-1"
+                >
                   <div className="absolute -left-[27px] top-1.5 w-3 h-3 rounded-full bg-violet-500 border-2 border-neutral-950" />
                   <p className="font-bold text-white text-sm uppercase">{exp.role} @ {exp.company}</p>
                   <p className="text-[10px] text-violet-400 font-mono font-medium">{exp.duration}</p>
                   <p className="text-slate-400 text-xs sm:text-sm mt-1">{exp.description}</p>
-                </div>
+                </motion.div>
               ))}
             </div>
           </section>
@@ -1347,21 +1556,42 @@ export default function TemplatesPreview({ data, isDemo = false }: Props) {
             <h3 className="text-xs font-mono font-bold text-violet-400 uppercase tracking-widest">04 / Unified Core Systems</h3>
             <div className="flex flex-wrap justify-center gap-2">
               {skills.map((s, idx) => (
-                <span key={idx} className="text-xs font-mono px-3 py-1.5 bg-neutral-950 border border-violet-900/40 text-slate-200 rounded-lg select-none hover:border-indigo-400 border-dashed duration-150 cursor-pointer">
+                <motion.span 
+                  key={idx} 
+                  whileHover={{ scale: 1.08, borderColor: "#a78bfa", color: "#fff" }}
+                  className="text-xs font-mono px-3 py-1.5 bg-neutral-950 border border-violet-900/40 text-slate-200 rounded-lg select-none hover:border-indigo-400 border-dashed duration-150 cursor-pointer"
+                >
                   {s}
-                </span>
+                </motion.span>
               ))}
             </div>
           </section>
         </main>
-      </div>
+      </motion.div>
     );
   }
 
-  // Fallback layout generic
+    // Fallback layout generic
+    return (
+      <div className="p-8 text-center text-slate-400">
+        <p>Error rendering portfolio preview template.</p>
+      </div>
+    );
+  })();
+
+  const effectivePlan = userPlan || data.userPlan || 'free';
+  const isFreePlan = effectivePlan === 'free';
+
   return (
-    <div className="p-8 text-center text-slate-400">
-      <p>Error rendering portfolio preview template.</p>
+    <div className="relative w-full min-h-screen">
+      {templateContent}
+      {isFreePlan && (
+        <div id="profyl-preview-watermark" className="fixed bottom-4 left-4 z-50 bg-slate-900/95 hover:bg-slate-900 border border-slate-800/80 px-3 py-2 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex items-center gap-2 text-white duration-150 animate-fadeIn font-sans">
+          <span className="text-[9px] text-slate-400 font-mono tracking-widest uppercase">Powered by</span>
+          <FullLogo size={15} />
+          <span className="text-[8px] font-bold text-amber-500 bg-amber-500/15 border border-amber-500/20 px-1.5 py-0.5 rounded-md uppercase tracking-wider font-mono">Free Account</span>
+        </div>
+      )}
     </div>
   );
 }

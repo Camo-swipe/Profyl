@@ -44,7 +44,7 @@ export default function App() {
     token: null
   });
 
-  // Light/Dark Theme Preference State (v2)
+  // Light/Dark Theme Preference State
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     return (localStorage.getItem("profyl_theme") as 'light' | 'dark') || 'dark';
   });
@@ -766,9 +766,11 @@ export default function App() {
       </main>
 
       {/* FOOTER SYSTEM */}
-      <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-slate-600 shrink-0">
-        <p>Profyl — Developed by K² Technologies under the owner Koustubh Katti. {/* Version: v2 */}</p>
-      </footer>
+      {currentView !== 'landing' && currentView !== 'builder' && (
+        <footer className="bg-slate-950 border-t border-slate-900 py-6 text-center text-xs text-slate-600 shrink-0">
+          <p>Profyl — Developed by K² Technologies under the owner Koustubh Katti.</p>
+        </footer>
+      )}
 
       {/* AUTH MODAL DIALOGS BOXES */}
       {authModal && (
@@ -934,8 +936,8 @@ export default function App() {
                 <div className="space-y-3 pt-2">
                   {[
                     { id: 'student_pro', name: 'Student Pro', price: '₹99/mo', desc: 'Up to 3 Portfolios, custom domain & premium themes' },
-                    { id: 'premium', name: 'Premium', price: '₹299/mo', desc: 'Unlimited portfolios, Recharts telemetry & CV PDF export' },
-                    { id: 'lifetime', name: 'Lifetime', price: '₹1499 run', desc: 'Host forever, priority AI prompt keys & all updates' }
+                    { id: 'premium', name: 'Premium', price: '₹199/mo', desc: 'Unlimited portfolios, Recharts telemetry & CV PDF export' },
+                    { id: 'lifetime', name: 'Lifetime', price: '₹999 run', desc: 'Host forever, priority AI prompt keys & all updates' }
                   ].map((p) => {
                     const active = selectedPlan === p.id;
                     return (
@@ -981,7 +983,7 @@ export default function App() {
                     <p className="font-extrabold text-sm text-white capitalize">{selectedPlan.replace('_', ' ')}</p>
                   </div>
                   <span className="text-sm font-black text-indigo-400 font-mono">
-                    {selectedPlan === 'student_pro' ? '₹99/mo' : selectedPlan === 'lifetime' ? '₹1499' : '₹299/mo'}
+                    {selectedPlan === 'student_pro' ? '₹99/mo' : selectedPlan === 'lifetime' ? '₹999' : '₹199/mo'}
                   </span>
                 </div>
 

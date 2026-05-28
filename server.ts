@@ -59,7 +59,7 @@ try {
 
 // Global In-Memory Store
 const port: Record<string, string> = {}; // session IDs / users
-const db = {
+const db: { users: any[]; portfolios: any[]; analytics: any[]; bookmarks: any[] } = {
   users: [
     {
       id: "usr-1",
@@ -322,7 +322,9 @@ app.get("/api/portfolios/slug/:slug", (req, res) => {
   if (!portfolio) {
     return res.status(404).json({ error: "Published portfolio not found with this slug link" });
   }
-  res.json(portfolio);
+  const owner = db.users.find(u => u.id === portfolio.userId);
+  const userPlan = owner ? owner.plan : 'free';
+  res.json({ ...portfolio, userPlan });
 });
 
 // Save or Create Portfolio
@@ -335,6 +337,22 @@ app.post("/api/portfolios", async (req, res) => {
 
   const data = req.body;
   const user = db.users.find(u => u.id === userId);
+
+  // Daily action limit for Free tier
+  if (user && user.plan === "free") {
+    const today = new Date().toISOString().split("T")[0];
+    if (user.lastActionDate === today) {
+      if ((user.dailyActionsCount || 0) >= 10) {
+        return res.status(403).json({ 
+          error: "You have reached your daily limit of 10 edit/save action credits for Free accounts! Upgrade to Student Pro, Premium, or Lifetime for unlimited actions!" 
+        });
+      }
+      user.dailyActionsCount = (user.dailyActionsCount || 0) + 1;
+    } else {
+      user.lastActionDate = today;
+      user.dailyActionsCount = 1;
+    }
+  }
 
   // Plan limits constraints checks
   if (!data.id) {
@@ -542,9 +560,9 @@ app.post("/api/payments/razorpay/order", async (req, res) => {
   }
 
   // Determine amount in INR Paise
-  let amount = 29900; // default premium 299
+  let amount = 19900; // default premium 199
   if (plan === "student_pro") amount = 9900; // 99 INR
-  if (plan === "lifetime") amount = 149900; // 1499 INR
+  if (plan === "lifetime") amount = 99900; // 999 INR
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -700,7 +718,12 @@ app.get("/api/recruiter/search", (req, res) => {
     }
   }
 
-  res.json(results);
+  const resultsWithPlan = results.map(p => {
+    const owner = db.users.find(u => u.id === p.userId);
+    return { ...p, userPlan: owner ? owner.plan : 'free' };
+  });
+
+  res.json(resultsWithPlan);
 });
 
 // Bookmarks candidate for recruiter
@@ -800,8 +823,23 @@ app.post("/api/ai/generate", async (req, res) => {
   // Update counts on user if authenticated
   let userObject = db.users.find(u => u.id === userId);
   if (userObject) {
-    if (userObject.plan === "free" && userObject.aiUsageCount >= 5) {
-      return res.status(403).json({ error: "You reached your limit of 5 free AI runs! Upgrade to Premium for infinite creations!" });
+    if (userObject.plan === "free") {
+      const today = new Date().toISOString().split("T")[0];
+      if (userObject.lastActionDate === today) {
+        if ((userObject.dailyActionsCount || 0) >= 10) {
+          return res.status(403).json({ 
+            error: "You have reached your daily limit of 10 edit/save action credits for Free accounts! Upgrade to Student Pro, Premium, or Lifetime for unlimited actions!" 
+          });
+        }
+        userObject.dailyActionsCount = (userObject.dailyActionsCount || 0) + 1;
+      } else {
+        userObject.lastActionDate = today;
+        userObject.dailyActionsCount = 1;
+      }
+
+      if (userObject.aiUsageCount >= 5) {
+        return res.status(403).json({ error: "You reached your limit of 5 free AI runs! Upgrade to Premium for infinite creations!" });
+      }
     }
     userObject.aiUsageCount = (userObject.aiUsageCount || 0) + 1;
 

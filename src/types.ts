@@ -1,5 +1,5 @@
 /**
- * Types definition for Profyl AI v2
+ * Types definition for Profyl AI
  */
 
 export interface PersonalInfo {
@@ -63,6 +63,7 @@ export interface PortfolioData {
   certifications: Certification[];
   testimonials: Testimonial[];
   customDomain?: string;
+  userPlan?: 'free' | 'student_pro' | 'premium' | 'lifetime';
 }
 
 export interface User {
@@ -73,6 +74,8 @@ export interface User {
   plan: 'free' | 'student_pro' | 'premium' | 'lifetime';
   portfolioCount: number;
   aiUsageCount: number;
+  lastActionDate?: string;
+  dailyActionsCount?: number;
 }
 
 export interface Subscription {

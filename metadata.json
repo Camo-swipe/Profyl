@@ -1,5 +1,5 @@
 {
-  "name": "Profyl AI v2",
+  "name": "Profyl AI",
   "description": "Stunning AI-powered portfolio building SaaS platform with interactive templates, full visual editor, recruiter tools, live deployment, and advanced analytics.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
